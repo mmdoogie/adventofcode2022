@@ -1,7 +1,7 @@
 #!/bin/python3
 
 from aocd import lines
-import functools
+from functools import cmp_to_key
 
 def cmp(left, right):
 	for n in range(len(left)):
@@ -54,9 +54,7 @@ allLines = [eval(l) for l in lines if len(l) != 0]
 key1, key2 = [[2]], [[6]]
 allLines += [key1, key2]
 
-for m in range(len(allLines)):
-	for n in range(len(allLines)-m-1):
-		if not cmp(allLines[n], allLines[n+1]):
-			allLines[n+1], allLines[n] = allLines[n], allLines[n+1]
+fixit = {True: -1, None: 0, False: 1}
+allLines.sort(key=cmp_to_key(lambda l,r:fixit[cmp(l,r)]))
 
 print((allLines.index(key1)+1) * (allLines.index(key2)+1))
