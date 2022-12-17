@@ -1,0 +1,77 @@
+#!/bin/python3
+
+from aocd import lines
+import itertools
+
+#lines = [">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"]
+
+shapes = [["  @@@@ "], ["   @   ", "  @@@  ", "   @   "], ["  @@@  ", "    @  ", "    @  "], ["  @    ", "  @    ", "  @    ", "  @    "], ["  @@   ", "  @@   "]]
+rows = ["-------"]
+
+sh = itertools.cycle(shapes)
+j = itertools.cycle(iter(lines[0]))
+
+for epoch in range(2022):
+	rows += ["       ", "       ", "       "]
+	rows += next(sh)
+	
+	if epoch % 100 == 0:
+		print("Epoch", epoch)
+
+	freeze = False
+	while not freeze:
+		push = next(j)
+		leftEdge = [l.index("@") if "@" in l else -1 for l in rows]
+		rightEdge = [l.rindex("@") if "@" in l else -1 for l in rows]
+
+		if push == "<":
+			if all([l == -1 or (l > 0 and rows[n][l-1] == " ") for n, l in enumerate(leftEdge)]):
+				for n, l in enumerate(rows):
+					if "@" not in l:
+						continue
+					rows[n] = l[0:leftEdge[n]-1] + l[leftEdge[n]:rightEdge[n]+1] + " " + l[rightEdge[n]+1:]
+					leftEdge[n] -= 1
+					rightEdge[n] -= 1
+		if push == ">":
+			if all([r == -1 or (r < 6 and rows[n][r+1] == " ") for n, r in enumerate(rightEdge)]):
+				for n, r in enumerate(rows):
+					if "@" not in r:
+						continue
+					rows[n] = r[0:leftEdge[n]] + " " + r[leftEdge[n]:rightEdge[n]+1] + r[rightEdge[n]+2:]
+					leftEdge[n] += 1
+					rightEdge[n] += 1
+
+		freeze = False
+		for y, r in enumerate(rows):
+			if "@" not in r:
+				continue
+			for x, c in enumerate(r):
+				if "@" not in c:
+					continue
+				if rows[y-1][x] not in "@ ":
+					freeze = True
+					break
+			if freeze:
+				break
+
+		for y, l in enumerate(rows):
+			if "@" not in l:
+				continue
+
+			if freeze:
+				rows[y] = rows[y].replace("@", "#")
+			else:
+				rows[y-1] = rows[y-1][0:leftEdge[y]] + ("@"*(rightEdge[y]-leftEdge[y]+1)) + rows[y-1][rightEdge[y]+1:]
+				rows[y] = rows[y][0:leftEdge[y]] + (" "*(rightEdge[y]-leftEdge[y]+1)) + rows[y][rightEdge[y]+1:]
+
+		if freeze:
+			empties = [l == "       " for l in rows]
+			lastRow = len(rows)
+			for n, v in enumerate(reversed(empties)):
+				if v == False:
+					lastRow -= n
+					break
+					
+			rows = rows[0:lastRow]
+
+print(len(rows)-1)
